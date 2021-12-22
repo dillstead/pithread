@@ -44,7 +44,7 @@ _start:
 
         // Call main
 	mov r2, #0x100
-        bl  main
+        bl  kernel_main
         b   halt
 
 // halt

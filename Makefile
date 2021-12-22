@@ -2,8 +2,9 @@ TOOLCHAIN = ../gcc-arm-none-eabi-10-2020-q4-major/bin/arm-none-eabi
 CC = $(TOOLCHAIN)-gcc
 GDB = $(TOOLCHAIN)-gdb
 OBJDUMP = $(TOOLCHAIN)-objdump
-CFLAGS = -mcpu=cortex-a7 -fpic -ffreestanding -g -Wall -Wextra
-LDFLAGS = -ffreestanding -nostdlib -lgcc
+CFLAGS = -mcpu=cortex-a7 -ffreestanding -g -Wall -Wextra
+CFLAGS += -DUSE_UART0
+LDFLAGS = -nostdlib -nostartfiles -lgcc
 LIB_DIR = lib
 SRCS = $(wildcard *.c)
 ASM_SRCS = $(wildcard *.S)
