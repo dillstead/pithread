@@ -1,12 +1,12 @@
 #include <string.h>
 #ifdef USE_UART0
-#include <uart0.h>
+#include "uart0.h"
 #else
-#include <aux.h>
+#include "aux.h"
 #endif
-#include <gpio.h>
-#include <uart.h>
-#include <mmio.h>
+#include "gpio.h"
+#include "uart.h"
+#include "mmio.h"
 
 void uart_init(void)
 {

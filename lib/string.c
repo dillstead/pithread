@@ -1,5 +1,5 @@
-#include <string.h>
-//#include <debug.h>
+#include "assert.h"
+#include "string.h"
 
 /* Copies SIZE bytes from SRC to DST, which must not overlap.
    Returns DST. */
@@ -8,8 +8,8 @@ void *memcpy(void *dst_, const void *src_, size_t size)
     unsigned char *dst = dst_;
     const unsigned char *src = src_;
 
-    //ASSERT(dst != NULL || size == 0);
-    //ASSERT(src != NULL || size == 0);
+    ASSERT(dst != NULL || size == 0);
+    ASSERT(src != NULL || size == 0);
 
     while (size-- > 0)
     {
@@ -26,8 +26,8 @@ void *memmove(void *dst_, const void *src_, size_t size)
     unsigned char *dst = dst_;
     const unsigned char *src = src_;
 
-    //ASSERT(dst != NULL || size == 0);
-    //ASSERT(src != NULL || size == 0);
+    ASSERT(dst != NULL || size == 0);
+    ASSERT(src != NULL || size == 0);
 
     if (dst < src) 
     {
@@ -58,8 +58,8 @@ int memcmp(const void *a_, const void *b_, size_t size)
     const unsigned char *a = a_;
     const unsigned char *b = b_;
 
-    //ASSERT(a != NULL || size == 0);
-    //ASSERT(b != NULL || size == 0);
+    ASSERT(a != NULL || size == 0);
+    ASSERT(b != NULL || size == 0);
 
     for (; size-- > 0; a++, b++)
     {
@@ -81,8 +81,8 @@ int strcmp(const char *a_, const char *b_)
     const unsigned char *a = (const unsigned char *) a_;
     const unsigned char *b = (const unsigned char *) b_;
 
-    //ASSERT(a != NULL);
-    //ASSERT(b != NULL);
+    ASSERT(a != NULL);
+    ASSERT(b != NULL);
 
     while (*a != '\0' && *a == *b) 
     {
@@ -101,7 +101,7 @@ void *memchr(const void *block_, int ch_, size_t size)
     const unsigned char *block = block_;
     unsigned char ch = ch_;
 
-    //ASSERT(block != NULL || size == 0);
+    ASSERT(block != NULL || size == 0);
 
     for (; size-- > 0; block++)
     {
@@ -122,7 +122,7 @@ char *strchr(const char *string, int c_)
 {
     char c = c_;
 
-    //ASSERT(string != NULL);
+    ASSERT(string != NULL);
 
     for (;;)
     {
@@ -265,8 +265,8 @@ char *strtok_r(char *s, const char *delimiters, char **save_ptr)
 {
     char *token;
   
-    //ASSERT(delimiters != NULL);
-    //ASSERT(save_ptr != NULL);
+    ASSERT(delimiters != NULL);
+    ASSERT(save_ptr != NULL);
 
     /* If S is nonnull, start from it.
        If S is null, start from saved position. */
@@ -274,7 +274,7 @@ char *strtok_r(char *s, const char *delimiters, char **save_ptr)
     {
         s = *save_ptr;
     }
-    //ASSERT(s != NULL);
+    ASSERT(s != NULL);
 
     /* Skip any DELIMITERS at our current position. */
     while (strchr(delimiters, *s) != NULL) 
@@ -313,7 +313,7 @@ void *memset(void *dst_, int value, size_t size)
 {
     unsigned char *dst = dst_;
 
-    //ASSERT(dst != NULL || size == 0);
+    ASSERT(dst != NULL || size == 0);
   
     while (size-- > 0)
     {
@@ -327,7 +327,7 @@ size_t strlen(const char *string)
 {
     const char *p;
 
-    //ASSERT(string != NULL);
+    ASSERT(string != NULL);
 
     for (p = string; *p != '\0'; p++)
     {
@@ -362,8 +362,8 @@ size_t strlcpy(char *dst, const char *src, size_t size)
 {
     size_t src_len;
 
-    //ASSERT(dst != NULL);
-    //ASSERT(src != NULL);
+    ASSERT(dst != NULL);
+    ASSERT(src != NULL);
 
     src_len = strlen(src);
     if (size > 0) 
@@ -393,8 +393,8 @@ size_t strlcat(char *dst, const char *src, size_t size)
 {
     size_t src_len, dst_len;
 
-    //ASSERT(dst != NULL);
-    //ASSERT(src != NULL);
+    ASSERT(dst != NULL);
+    ASSERT(src != NULL);
 
     src_len = strlen(src);
     dst_len = strlen(dst);
