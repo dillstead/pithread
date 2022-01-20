@@ -7,6 +7,7 @@
 
 static struct atag *atags;
 
+#ifndef NDEBUG
 static void print_atags(struct atag *tags)
 {
     while (tags->hdr.value != ATAG_NONE)
@@ -34,11 +35,14 @@ static void print_atags(struct atag *tags)
     }
     printf("ATAG_NONE\n");
 }
+#endif
 
 void atags_init(void *tags)
 {
     atags = (struct atag *) tags;
+#ifndef NDEBUG
     print_atags(atags);
+#endif
 }
 
 struct atag *get_atag(unsigned int value, struct atag **next)

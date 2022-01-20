@@ -51,4 +51,4 @@ dbgrun: build gdbinit
 
 gdbinit:
 	echo "target remote localhost:1234" > .gdbinit
-	echo "break get_atag" >> .gdbinit
+	echo "break malloc.c:93" >> .gdbinit
