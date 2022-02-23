@@ -16,7 +16,7 @@
 #include <stdarg.h>
 #include "debug.h"
 
-void halt(void);
+extern void halt(void);
 
 /* Halts, printing the source file name, line number, and
    function name, plus a user-specific message. */
