@@ -1,22 +1,9 @@
-/*#include <console.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stddef.h>
 #include <stdio.h>
-#include <string.h>
-#include "threads/init.h"
-#include "threads/interrupt.h"
-#include "threads/thread.h"
-#include "threads/switch.h"
-#include "threads/vaddr.h"
-#include "devices/serial.h"
-#include "devices/shutdown.h"*/
-
-#include <stdio.h>
+#include <stdint.h>
 #include <stdarg.h>
 #include "debug.h"
 
-extern void halt(void);
+void halt(void);
 
 /* Halts, printing the source file name, line number, and
    function name, plus a user-specific message. */
@@ -32,4 +19,17 @@ void debug_panic(const char *file, int line, const char *function,
     va_end(args);
     halt();
     for (;;);
+}
+
+/* Prints the call stack, that is, a list of addresses, one in
+   each of the functions we are nested within. */
+void debug_backtrace(void)
+{
+    printf("backtrace: ");
+    for (uint32_t *frame = __builtin_frame_address(0);
+         frame; frame = (uint32_t *) frame[-1])
+    {
+        printf("%p ", frame[0]);
+    }
+    printf("\n");
 }
