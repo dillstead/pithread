@@ -2,8 +2,8 @@
 #include "assert.h"
 #include "stdio.h"
 #include "round.h"
+#include "debug.h"
 #include "malloc.h"
-#include "hexdump.h"
 #include "bitmap.h"
 
 /* Element type.

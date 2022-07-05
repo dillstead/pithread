@@ -10,7 +10,7 @@
 #include "thread.h"
 #include "rand.h"
 
-extern int spin_test(void);
+extern bool spin_test(void);
 extern int sieve_test(void);
 extern int sort_test(void);
     
@@ -26,9 +26,31 @@ void kernel_main(uint32_t r0, uint32_t r1, void *atags)
     malloc_init();
     thread_init(false);
 
-    ASSERT(!spin_test());
-    sieve_test();
-    ASSERT(!sort_test());
-    printf("tests finished!\n");
+    printf("Running tests...\n");
+    if (spin_test())
+    {
+        printf("spin_test passed\n");
+    }
+    else
+    {
+        printf("spin_test failed\n");        
+    }
+    if (sieve_test())
+    {
+        printf("sieve_test passed\n");
+    }
+    else
+    {
+        printf("sieve_test failed\n");
+    }
+    if (sort_test())
+    {
+        printf("sort_test passed\n");
+    }
+    else
+    {
+        printf("sort_test failed\n");
+    }
+    printf("Tests finished\n");
     thread_exit(0);
 }

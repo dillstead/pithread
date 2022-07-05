@@ -2,6 +2,7 @@
 #include <round.h>
 #include <assert.h>
 #include <string.h>
+#include "interrupts.h"
 #include "thread.h"
 
 #define THREAD_MAGIC 0xDEADBEEF
@@ -111,7 +112,7 @@ struct thread *thread_new(int apply(void *),
     {
         nbytes = 0;
     }
-    stack_sz = ROUND_UP(16 * 1024 + sizeof *thr + nbytes, 15);
+    stack_sz = ROUND_UP(16 * 1024 + sizeof *thr + nbytes, 8);
     release();
     thr = malloc(stack_sz);
     if (!thr)
@@ -121,17 +122,16 @@ struct thread *thread_new(int apply(void *),
     memset(thr, 0, stack_sz);
     thr->magic = THREAD_MAGIC;
     list_init(&thr->join_list);
-    thr->sp = (uint32_t *) ROUND_DOWN((uintptr_t) ((uint8_t *) thr + stack_sz), 16);
+    thr->sp = (uint32_t *) ROUND_DOWN((uintptr_t) ((uint8_t *) thr + stack_sz), 8);
     thr->handle = thr;
     if (nbytes > 0)
     {
-        thr->sp = (uint32_t *) ((uint8_t *) thr->sp - ROUND_UP(nbytes, 16));
+        thr->sp = (uint32_t *) ((uint8_t *) thr->sp - ROUND_UP(nbytes, 8));
         memcpy(thr->sp, args, nbytes);
         args = thr->sp;
     }
-    
-    /* At this point, the stack is aligned at 16 bytes.  Setup the stack so 
-       that when the thread returns from swtch for the first time, it will run 
+    /* At this point, the stack is double word (8 bytes) aligned.  Setup the stack 
+       so that when the thread returns from swtch for the first time, it will run 
        thread_start with apply and args in registers. As per the ARM-AAPCS 
        (5.2.1 Stack) the stack must be double word aligned upon function entry.  
        Registers r4 - r8, r10, and r11 must be preserved (5.1.1 Core registers).  
@@ -139,7 +139,7 @@ struct thread *thread_new(int apply(void *),
        used as a callee-saved register variable so it must also be preserved.
        Stack contents:
 
-       lr  thread_start sp[8] <-- double word aligned
+       lr  thread_start sp[8] <-- word aligned
        fp               sp[7]
        r10 apply        sp[6]
        r9  args         sp[5]
@@ -263,15 +263,19 @@ void sem_init(struct semaphore *sem, unsigned int value)
    to become positive and then atomically decrements it. */
 void sem_down(struct semaphore *sem)
 {
+    bool old_level;
+    
     ASSERT(sem != NULL);
     ASSERT(current);
 
+    old_level = interrupts_disable();
     while (sem->value == 0) 
     {
         put(current, &sem->waiters);
         run();
     }
     sem->value--;
+    interrupts_set_level(old_level);
 }
 
 /* Down or "P" operation on a semaphore, but only if the
@@ -283,8 +287,10 @@ bool sem_try_down(struct semaphore *sem)
 {
     ASSERT(sem != NULL);
 
+    bool old_level;
     bool success;
-        
+
+    old_level = interrupts_disable();
     if (sem->value > 0) 
     {
         sem->value--;
@@ -294,6 +300,7 @@ bool sem_try_down(struct semaphore *sem)
     {
         success = false;
     }
+    interrupts_set_level(old_level);
     return success;   
 }
 
@@ -302,23 +309,25 @@ bool sem_try_down(struct semaphore *sem)
    if any. */
 void sem_up(struct semaphore *sem)
 {
+    bool old_level;
     struct thread *thr;
         
     ASSERT(sem != NULL);
-    
+
+    old_level = interrupts_disable();
     sem->value++;
     if (!list_empty(&sem->waiters))
     {
         thr = get(&sem->waiters);
         put(thr, &ready_list);
     }
+    interrupts_set_level(old_level);
 }
 
 /* Returns true if the current thread holds LOCK, false
    otherwise.  (Note that testing whether some other thread holds
    a lock would be racy.) */
-bool
-lock_held_by_current_thread (const struct lock *lock) 
+static bool lock_held_by_current_thread (const struct lock *lock) 
 {
     ASSERT(lock != NULL);
 
@@ -353,11 +362,15 @@ void lock_init(struct lock *lock)
    thread. */
 void lock_acquire(struct lock *lock)
 {
+    bool old_level;
+    
     ASSERT(lock != NULL);
     ASSERT(!lock_held_by_current_thread(lock));
 
+    old_level = interrupts_disable();
     sem_down(&lock->sem);
     lock->holder = current;
+    interrupts_set_level(old_level);
 }
 
 /* Tries to acquires LOCK and returns true if successful or false
@@ -382,11 +395,15 @@ bool lock_try_acquire(struct lock *lock)
    and wakes up a thread waiting on the lock. */
 void lock_release(struct lock *lock)
 {
+    bool old_level;
+    
     ASSERT(lock != NULL);
     ASSERT(lock_held_by_current_thread(lock));
 
+    old_level = interrupts_disable();
     lock->holder = NULL;
     sem_up (&lock->sem);
+    interrupts_set_level(old_level);
 }
 
 /* Initializes condition variable COND.  A condition variable
@@ -397,7 +414,6 @@ void cond_init(struct condition *cond)
     ASSERT(cond != NULL);
 
     list_init (&cond->waiters);
-    
 }
 
 /* Atomically releases LOCK and waits for COND to be signaled by

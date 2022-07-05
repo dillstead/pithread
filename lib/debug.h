@@ -1,6 +1,9 @@
 #ifndef __LIB_DEBUG_H
 #define __LIB_DEBUG_H
 
+#include <stddef.h>
+#include <stdbool.h>
+
 /* GCC lets us add "attributes" to functions, function
    parameters, etc. to indicate their properties.
    See the GCC manual for details. */
@@ -15,6 +18,8 @@
 
 void debug_panic(const char *file, int line, const char *function,
                  const char *message, ...) PRINTF_FORMAT(4, 5) NO_RETURN;
+void debug_backtrace(void);
+void hex_dump(size_t ofs, const void *buf_, size_t size, bool ascii);
 
 #undef NOT_REACHED
 #ifndef NDEBUG

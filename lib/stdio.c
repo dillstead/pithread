@@ -374,6 +374,11 @@ static void __vprintf(const char *format, va_list args, void (*output)(char, voi
         /* Literally copy non-conversions to output. */
         if (*format != '%') 
         {
+            /* Convert newline to carrige return + newline */
+            if (*format == '\n')
+            {
+                output('\r', aux);
+            }
             output(*format, aux);
             continue;
         }

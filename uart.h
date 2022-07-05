@@ -3,6 +3,6 @@
 
 void uart_init(void);
 void uart_putc(char c);
-unsigned char uart_getc(void);
+void uart_puts(const char *s);
 
 #endif

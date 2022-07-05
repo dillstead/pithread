@@ -21,11 +21,12 @@ _start:
         cmp     r1, #0
         bne     halt
 
-        // Setup the stack.  Stack will be 32 KB above kernel image
-        ldr     sp, =__end
-	mov     r4, #(KERNEL_STACK_SIZE)
-	add     sp, sp, r4
+        // Setup the stack.  Stack will work down from the start of the kernel.
+        ldr     sp, =__start
+	//mov     r4, #(KERNEL_STACK_SIZE)
+	//add     sp, sp, r4
 
+#ifdef COPY_ATAGS
         // Copy atags to the correct location
         mov     r4, #0x100
         ldr     r5, =test_atags
@@ -50,7 +51,8 @@ _start:
         subs    r6, #1
         b       2b
 
-3:      
+3:
+#endif        
         // Clear out bss.
         ldr     r4, =__bss_start
         ldr     r9, =__bss_end

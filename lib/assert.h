@@ -2,9 +2,9 @@
 #define __LIB_ASSERT_H
 
 #include <stdio.h>
+#include "debug.h"
 
 void halt(void);
-void debug_backtrace(void);
 
 #undef assert
 #ifdef NDEBUG

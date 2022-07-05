@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <atags.h>
 #include <page.h>
+#include <thread.h>
 #include "assert.h"
 #include "debug.h"
 #include "round.h"
@@ -10,6 +11,9 @@
 #include "bitmap.h"
 #include "palloc.h"
 
+extern void *__start;
+extern void *__end;
+
 /* Page allocator.  Hands out memory in page-size (or
    page-multiple) chunks.  See malloc.h for an allocator that
    hands out smaller chunks. */
@@ -17,7 +21,7 @@
 /* A memory pool. */
 struct pool
 {
-    //struct lock lock;                 /* Mutual exclusion. */
+    struct lock lock;                   /* Mutual exclusion. */
     struct bitmap *used_map;            /* Bitmap of free pages. */
     uint8_t *base;                      /* Base of pool. */
 };
@@ -36,10 +40,24 @@ void palloc_init(void)
     uint8_t *free_end;
     size_t free_pages;
     
-    /* Assumption is that there's only one memory chunk.  If there
-       are multiple chunks, add a pool for each chunk. */
+    /* Assumption is that there's only one memory chunk which also
+       contains the kernel.  If there are multiple chunks, add a 
+       pool for each chunk. */
     tag = get_atag(ATAG_MEM, NULL);
     if (!tag)
+    {
+        PANIC("palloc_init: no memory");
+    }
+    /* If this is the chunk that contains the kernel it needs
+       to be adjusted in size to account for that. */
+    if ((uintptr_t) &__start >= tag->u.mem.start
+        && (uintptr_t) &__start < tag->u.mem.start + tag->u.mem.size)
+    {
+        tag->u.mem.start = (uintptr_t) &__end;
+        tag->u.mem.size = tag->u.mem.start + tag->u.mem.size 
+            - (uintptr_t) &__end;
+    }
+    if (tag->u.mem.size < PGSIZE)
     {
         PANIC("palloc_init: no memory");
     }
@@ -65,9 +83,9 @@ void *palloc_get_multiple(enum palloc_flags flags, size_t page_cnt)
         return NULL;
     }
 
-    //lock_acquire(&pool->lock);
+    lock_acquire(&pool.lock);
     page_idx = bitmap_scan_and_flip(pool.used_map, 0, page_cnt, false);
-    //lock_release(&pool->lock);
+    lock_release(&pool.lock);
 
     if (page_idx != BITMAP_ERROR)
     {
@@ -149,7 +167,7 @@ static void init_pool(struct pool *p, void *base, size_t page_cnt, const char *n
     printf("%zu pages available in %s.\n", page_cnt, name);
 
     /* Initialize the pool. */
-    //lock_init(&p->lock);
+    lock_init(&p->lock);
     p->used_map = bitmap_create_in_buf(page_cnt, base, bm_pages * PGSIZE);
     p->base = base + bm_pages * PGSIZE;
 }

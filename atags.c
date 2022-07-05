@@ -17,12 +17,26 @@ static void print_atags(struct atag *tags)
         case ATAG_CORE:
         {
             printf("ATAG_CORE\n");
+            if (tags->hdr.size > 2)
+            {
+                printf("flags: %p, page size: %u, dev: %u\n", tags->u.core.flags,
+                       tags->u.core.pagesize, tags->u.core.rootdev);
+            }
             break;
         }
         case ATAG_MEM:
         {
             printf("ATAG_MEM\n");
-            printf("sz: %u, start: %x\n", tags->u.mem.size, tags->u.mem.start);
+            printf("size: %u, start: %x\n", tags->u.mem.size, tags->u.mem.start);
+            break;
+        }
+        case ATAG_CMDLINE:
+        {
+            printf("ATAG_CMDLINE\n");
+            if (tags->hdr.size > 2)
+            {
+                printf("%s\n", tags->u.cmdline.cmdline);
+            }
             break;
         }
         default:
@@ -63,4 +77,3 @@ struct atag *get_atag(unsigned int value, struct atag **next)
     }
     return NULL;
 }
-

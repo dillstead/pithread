@@ -1,16 +1,6 @@
-/*#include "threads/malloc.h"
-  #include <debug.h>
-  #include <list.h>
-  #include <round.h>
-  #include <stdint.h>
-  #include <stdio.h>
-  #include <string.h>
-  #include "threads/palloc.h"
-  #include "threads/synch.h"
-  #include "threads/vaddr.h"*/
-
 #include <page.h>
 #include "assert.h"
+#include "thread.h"
 #include "string.h"
 #include "list.h"
 #include "round.h"
@@ -48,7 +38,7 @@ struct desc
     size_t block_size;          /* Size of each element in bytes. */
     size_t blocks_per_arena;    /* Number of blocks in an arena. */
     struct list free_list;      /* List of free blocks. */
-    //struct lock lock;           /* Lock. */
+    struct lock lock;           /* Lock. */
 };
 
 /* Magic number for detecting arena corruption. */
@@ -87,14 +77,8 @@ void malloc_init(void)
         d->block_size = block_size;
         d->blocks_per_arena = (PGSIZE - sizeof(struct arena)) / block_size;
         list_init(&d->free_list);
-        //lock_init(&d->lock);
+        lock_init(&d->lock);
     }
-
-    void *p = malloc(PGSIZE / 2);
-    free(p);
-
-    p = malloc(PGSIZE / 2 + 1);
-    free(p);
 }
 
 /* Obtains and returns a new block of at least SIZE bytes.
@@ -139,7 +123,7 @@ void *malloc(size_t size)
         return a + 1;
     }
 
-    //lock_acquire(&d->lock);
+    lock_acquire(&d->lock);
 
     /* If the free list is empty, create a new arena. */
     if (list_empty(&d->free_list))
@@ -150,7 +134,7 @@ void *malloc(size_t size)
         a = palloc_get_page(0);
         if (a == NULL) 
         {
-            //lock_release(&d->lock);
+            lock_release(&d->lock);
             return NULL; 
         }
 
@@ -169,7 +153,7 @@ void *malloc(size_t size)
     b = list_entry(list_pop_front(&d->free_list), struct block, free_elem);
     a = block_to_arena(b);
     a->free_cnt--;
-    //lock_release(&d->lock);
+    lock_release(&d->lock);
     return b;
 }
 
@@ -253,7 +237,7 @@ void free(void *p)
             memset(b, 0xcc, d->block_size);
 #endif
   
-            //lock_acquire(&d->lock);
+            lock_acquire(&d->lock);
 
             /* Add block to free list. */
             list_push_front(&d->free_list, &b->free_elem);
@@ -272,7 +256,7 @@ void free(void *p)
                 palloc_free_page(a);
             }
 
-            //lock_release(&d->lock);
+            lock_release(&d->lock);
         }
         else
         {
