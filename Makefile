@@ -23,7 +23,7 @@ IMG_NAME=kernel7
 build: $(OBJS) $(HDRS)
 	$(CC) -T linker.ld -o $(IMG_NAME).elf $(OBJS) $(LDFLAGS)
 	$(OBJCOPY) $(IMG_NAME).elf -O binary $(IMG_NAME).img
-	$(OBJDUMP) -d -S $(IMG_NAME).elf >> $(IMG_NAME).asm
+	$(OBJDUMP) -d -S $(IMG_NAME).elf > $(IMG_NAME).asm
 
 $(LIB_DIR)/%.o: $(LIB_DIR)/%.c
 	$(CC) $(CFLAGS) $(INCS) -c $< -o $@
